@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短链管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-small {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #22c55e;
+        }
+
+        .result.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .table-container {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #374151;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        td {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .short-code {
+            color: #667eea;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .short-code:hover {
+            text-decoration: underline;
+        }
+
+        .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.expired {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f3f4f6;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            padding: 8px 16px;
+            color: #6b7280;
+        }
+
+        .login-container {
+            max-width: 400px;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .toggle-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .toggle-link a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .copy-btn {
+            padding: 4px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: #5a6fd6;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .auth-tab {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .auth-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 500;
+        }
+
+        .captcha-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .captcha-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .captcha-btn {
+            padding: 14px 16px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            background: white;
+            color: #667eea;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .captcha-btn:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .captcha-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div id="auth-section">
+            <h1>🔐 登录</h1>
+            <p class="subtitle" style="text-align: center; color: #666; margin: 10px 0 20px;">请登录管理后台</p>
+            
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabPasswordLogin">密码登录</button>
+                <button class="auth-tab" id="tabCaptchaLogin">验证码登录</button>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">邮箱</label>
+                    <input type="email" id="loginEmail" name="email" placeholder="请输入邮箱" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" name="password" placeholder="请输入密码" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">
+                    <span id="loginBtnText">登录</span>
+                    <span id="loginLoading" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+
+            <form id="captchaLoginForm" style="display: none;">
+                <div class="form-group">
+                    <label for="captchaEmail">邮箱</label>
+                    <input type="email" id="captchaEmail" name="email" placeholder="请输入邮箱" required>
+                </div>
+                <div class="captcha-row">
+                    <div class="form-group">
+                        <label for="captchaCode">验证码</label>
+                        <input type="text" id="captchaCode" name="captcha" placeholder="请输入验证码" required>
+                    </div>
+                    <button type="button" class="captcha-btn" id="sendCaptchaBtn">获取验证码</button>
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">
+                    <span id="captchaLoginBtnText">登录</span>
+                    <span id="captchaLoginLoading" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+
+            <div id="authResult" class="result"></div>
+
+            <p class="toggle-link">
+                <a href="#" id="showForgotPassword">忘记密码？</a>
+            </p>
+
+            <p class="toggle-link">
+                还没有账号？<a href="#" id="showRegister">立即注册</a>
+            </p>
+        </div>
+
+        <div id="register-section" style="display: none;">
+            <h1>📝 注册</h1>
+            <p class="subtitle" style="text-align: center; color: #666; margin: 10px 0 30px;">创建新账号</p>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regEmail">邮箱</label>
+                    <input type="email" id="regEmail" name="email" placeholder="请输入邮箱" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">密码</label>
+                    <input type="password" id="regPassword" name="password" placeholder="请输入密码（至少6位）" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">
+                    <span id="regBtnText">注册</span>
+                    <span id="regLoading" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+
+            <div id="regResult" class="result"></div>
+
+            <p class="toggle-link">
+                已有账号？<a href="#" id="showLogin">立即登录</a>
+            </p>
+        </div>
+
+        <div id="forgot-password-section" style="display: none;">
+            <h1>🔑 忘记密码</h1>
+            <p class="subtitle" style="text-align: center; color: #666; margin: 10px 0 30px;">通过邮箱验证码重置密码</p>
+            
+            <form id="forgotPasswordForm">
+                <div class="form-group">
+                    <label for="forgotEmail">邮箱</label>
+                    <input type="email" id="forgotEmail" name="email" placeholder="请输入注册时的邮箱" required>
+                </div>
+                <div class="captcha-row">
+                    <div class="form-group">
+                        <label for="forgotCaptcha">验证码</label>
+                        <input type="text" id="forgotCaptcha" name="captcha" placeholder="请输入验证码" required>
+                    </div>
+                    <button type="button" class="captcha-btn" id="sendForgotCaptchaBtn">获取验证码</button>
+                </div>
+                <div class="form-group">
+                    <label for="forgotNewPassword">新密码</label>
+                    <input type="password" id="forgotNewPassword" name="new_password" placeholder="请输入新密码（至少6位）" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">
+                    <span id="forgotBtnText">重置密码</span>
+                    <span id="forgotLoading" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+
+            <div id="forgotResult" class="result"></div>
+
+            <p class="toggle-link">
+                返回登录？<a href="#" id="showLoginFromForgot">立即登录</a>
+            </p>
+        </div>
+
+        <div id="dashboard-section" style="display: none;">
+            <div class="header">
+                <h1>📊 短链管理</h1>
+                <div class="user-info">
+                    <span id="currentUser"></span>
+                    <button class="logout-btn" id="logoutBtn">退出登录</button>
+                </div>
+            </div>
+
+            <form id="createForm">
+                <div class="form-group">
+                    <label for="createUrl">原始链接</label>
+                    <input type="url" id="createUrl" name="url" placeholder="请输入需要缩短的网址..." required>
+                </div>
+                <div class="form-group">
+                    <label for="createExpire">过期时间</label>
+                    <input type="datetime-local" id="createExpire" name="expireAt">
+                    <p style="font-size: 12px; color: #999; margin-top: 6px;">留空则默认24小时后过期</p>
+                </div>
+                <button type="submit" class="btn" id="createBtn">
+                    <span id="createBtnText">创建短链接</span>
+                    <span id="createLoading" class="loading" style="display: none;"></span>
+                </button>
+            </form>
+
+            <div id="createResult" class="result"></div>
+
+            <div class="table-container">
+                <table id="linksTable">
+                    <thead>
+                        <tr>
+                            <th>短码</th>
+                            <th>访问次数</th>
+                            <th>过期时间</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="linksBody"></tbody>
+                </table>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <p>暂无短链记录</p>
+                </div>
+            </div>
+
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let currentPage = 1;
+        let totalPages = 1;
+        let token = localStorage.getItem('token');
+
+        const authSection = document.getElementById('auth-section');
+        const registerSection = document.getElementById('register-section');
+        const forgotPasswordSection = document.getElementById('forgot-password-section');
+        const dashboardSection = document.getElementById('dashboard-section');
+        const currentUserSpan = document.getElementById('currentUser');
+        const linksBody = document.getElementById('linksBody');
+        const emptyState = document.getElementById('emptyState');
+        const pagination = document.getElementById('pagination');
+
+        if (token) {
+            showDashboard();
+        } else {
+            showAuth();
+        }
+
+        function showAuth() {
+            authSection.style.display = 'block';
+            registerSection.style.display = 'none';
+            forgotPasswordSection.style.display = 'none';
+            dashboardSection.style.display = 'none';
+            switchTab('password');
+        }
+
+        function showRegister() {
+            authSection.style.display = 'none';
+            registerSection.style.display = 'block';
+            forgotPasswordSection.style.display = 'none';
+            dashboardSection.style.display = 'none';
+        }
+
+        function showForgotPassword() {
+            authSection.style.display = 'none';
+            registerSection.style.display = 'none';
+            forgotPasswordSection.style.display = 'block';
+            dashboardSection.style.display = 'none';
+        }
+
+        async function showDashboard() {
+            try {
+                const claims = parseJwt(token);
+                currentUserSpan.textContent = `欢迎, ${claims.username}`;
+                
+                authSection.style.display = 'none';
+                registerSection.style.display = 'none';
+                forgotPasswordSection.style.display = 'none';
+                dashboardSection.style.display = 'block';
+
+                await loadLinks(1);
+            } catch {
+                logout();
+            }
+        }
+
+        function logout() {
+            token = null;
+            localStorage.removeItem('token');
+            document.getElementById('createResult').textContent = '';
+            showAuth();
+        }
+
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        async function apiRequest(url, method, data) {
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            if (token) {
+                options.headers.Authorization = 'Bearer ' + token;
+            }
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            const response = await fetch(url, options);
+            return response.json();
+        }
+
+        function switchTab(tab) {
+            const passwordTab = document.getElementById('tabPasswordLogin');
+            const captchaTab = document.getElementById('tabCaptchaLogin');
+            const loginForm = document.getElementById('loginForm');
+            const captchaLoginForm = document.getElementById('captchaLoginForm');
+
+            if (tab === 'password') {
+                passwordTab.classList.add('active');
+                captchaTab.classList.remove('active');
+                loginForm.style.display = 'block';
+                captchaLoginForm.style.display = 'none';
+            } else {
+                passwordTab.classList.remove('active');
+                captchaTab.classList.add('active');
+                loginForm.style.display = 'none';
+                captchaLoginForm.style.display = 'block';
+            }
+        }
+
+        document.getElementById('tabPasswordLogin').addEventListener('click', () => switchTab('password'));
+        document.getElementById('tabCaptchaLogin').addEventListener('click', () => switchTab('captcha'));
+
+        document.getElementById('showRegister').addEventListener('click', (e) => {
+            e.preventDefault();
+            showRegister();
+        });
+
+        document.getElementById('showLogin').addEventListener('click', (e) => {
+            e.preventDefault();
+            showAuth();
+        });
+
+        document.getElementById('showLoginFromForgot').addEventListener('click', (e) => {
+            e.preventDefault();
+            showAuth();
+        });
+
+        document.getElementById('showForgotPassword').addEventListener('click', (e) => {
+            e.preventDefault();
+            showForgotPassword();
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!validateEmail(email)) {
+                showResult('authResult', 'error', '请输入正确的邮箱格式');
+                return;
+            }
+            
+            document.getElementById('loginBtnText').style.display = 'none';
+            document.getElementById('loginLoading').style.display = 'inline-block';
+
+            try {
+                const data = await apiRequest(`${API_BASE}/auth/login`, 'POST', { email, password });
+                
+                if (data.code === 0) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    clearAllResults();
+                    showDashboard();
+                } else {
+                    showResult('authResult', 'error', data.message);
+                }
+            } catch (err) {
+                showResult('authResult', 'error', '登录失败，请检查网络');
+            } finally {
+                document.getElementById('loginBtnText').style.display = 'inline';
+                document.getElementById('loginLoading').style.display = 'none';
+            }
+        });
+
+        document.getElementById('captchaLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('captchaEmail').value;
+            const captcha = document.getElementById('captchaCode').value;
+            
+            document.getElementById('captchaLoginBtnText').style.display = 'none';
+            document.getElementById('captchaLoginLoading').style.display = 'inline-block';
+
+            try {
+                const data = await apiRequest(`${API_BASE}/auth/login/captcha`, 'POST', { email, captcha });
+                
+                if (data.code === 0) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    clearAllResults();
+                    showDashboard();
+                } else {
+                    showResult('authResult', 'error', data.message);
+                }
+            } catch (err) {
+                showResult('authResult', 'error', '登录失败，请检查网络');
+            } finally {
+                document.getElementById('captchaLoginBtnText').style.display = 'inline';
+                document.getElementById('captchaLoginLoading').style.display = 'none';
+            }
+        });
+
+        document.getElementById('sendCaptchaBtn').addEventListener('click', async () => {
+            const email = document.getElementById('captchaEmail').value;
+            if (!email) {
+                showResult('authResult', 'error', '请输入邮箱');
+                return;
+            }
+
+            const btn = document.getElementById('sendCaptchaBtn');
+            btn.disabled = true;
+            btn.textContent = '发送中...';
+
+            try {
+                const data = await apiRequest(`${API_BASE}/auth/captcha`, 'POST', { email });
+                
+                if (data.code === 0) {
+                    showResult('authResult', 'success', '验证码已发送，请注意查收');
+                    let countdown = 60;
+                    btn.textContent = `${countdown}秒后重发`;
+                    const timer = setInterval(() => {
+                        countdown--;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            btn.disabled = false;
+                            btn.textContent = '获取验证码';
+                        } else {
+                            btn.textContent = `${countdown}秒后重发`;
+                        }
+                    }, 1000);
+                } else {
+                    showResult('authResult', 'error', data.message);
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                }
+            } catch (err) {
+                showResult('authResult', 'error', '发送失败，请检查网络');
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            
+            if (!validateEmail(email)) {
+                showResult('regResult', 'error', '请输入正确的邮箱格式');
+                return;
+            }
+            
+            document.getElementById('regBtnText').style.display = 'none';
+            document.getElementById('regLoading').style.display = 'inline-block';
+
+            try {
+                const data = await apiRequest(`${API_BASE}/auth/register`, 'POST', { email, password });
+                
+                if (data.code === 0) {
+                    showResult('regResult', 'success', '注册成功，请登录');
+                    setTimeout(() => showAuth(), 2000);
+                } else {
+                    showResult('regResult', 'error', data.message);
+                }
+            } catch (err) {
+                showResult('regResult', 'error', '注册失败，请检查网络');
+            } finally {
+                document.getElementById('regBtnText').style.display = 'inline';
+                document.getElementById('regLoading').style.display = 'none';
+            }
+        });
+
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('forgotEmail').value;
+            const captcha = document.getElementById('forgotCaptcha').value;
+            const newPassword = document.getElementById('forgotNewPassword').value;
+            
+            document.getElementById('forgotBtnText').style.display = 'none';
+            document.getElementById('forgotLoading').style.display = 'inline-block';
+
+            try {
+                const data = await apiRequest(`${API_BASE}/auth/reset-password`, 'POST', { email, captcha, new_password: newPassword });
+                
+                if (data.code === 0) {
+                    showResult('forgotResult', 'success', '密码重置成功，请登录');
+                    setTimeout(() => showAuth(), 2000);
+                } else {
+                    showResult('forgotResult', 'error', data.message);
+                }
+            } catch (err) {
+                showResult('forgotResult', 'error', '重置失败，请检查网络');
+            } finally {
+                document.getElementById('forgotBtnText').style.display = 'inline';
+                document.getElementById('forgotLoading').style.display = 'none';
+            }
+        });
+
+        document.getElementById('sendForgotCaptchaBtn').addEventListener('click', async () => {
+            const email = document.getElementById('forgotEmail').value;
+            if (!email) {
+                showResult('forgotResult', 'error', '请输入邮箱');
+                return;
+            }
+
+            const btn = document.getElementById('sendForgotCaptchaBtn');
+            btn.disabled = true;
+            btn.textContent = '发送中...';
+
+            try {
+                const data = await apiRequest(`${API_BASE}/auth/forgot-password`, 'POST', { email });
+                
+                if (data.code === 0) {
+                    showResult('forgotResult', 'success', '验证码已发送，请注意查收');
+                    let countdown = 60;
+                    btn.textContent = `${countdown}秒后重发`;
+                    const timer = setInterval(() => {
+                        countdown--;
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            btn.disabled = false;
+                            btn.textContent = '获取验证码';
+                        } else {
+                            btn.textContent = `${countdown}秒后重发`;
+                        }
+                    }, 1000);
+                } else {
+                    showResult('forgotResult', 'error', data.message);
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                }
+            } catch (err) {
+                showResult('forgotResult', 'error', '发送失败，请检查网络');
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+            }
+        });
+
+        document.getElementById('createForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('createUrl').value;
+            let expireAt = null;
+            
+            if (document.getElementById('createExpire').value) {
+                expireAt = Math.floor(new Date(document.getElementById('createExpire').value).getTime() / 1000);
+            } else {
+                expireAt = Math.floor((new Date().getTime() + 24 * 60 * 60 * 1000) / 1000);
+            }
+            
+            document.getElementById('createBtnText').style.display = 'none';
+            document.getElementById('createLoading').style.display = 'inline-block';
+
+            try {
+                const data = await apiRequest(`${API_BASE}/create`, 'POST', { url, expire_at: expireAt });
+                
+                if (data.code === 0) {
+                    showResult('createResult', 'success', `创建成功！短码: ${data.short_code}`);
+                    document.getElementById('createUrl').value = '';
+                    document.getElementById('createExpire').value = '';
+                    await loadLinks(1);
+                } else {
+                    showResult('createResult', 'error', data.message);
+                }
+            } catch (err) {
+                showResult('createResult', 'error', '创建失败，请检查网络');
+            } finally {
+                document.getElementById('createBtnText').style.display = 'inline';
+                document.getElementById('createLoading').style.display = 'none';
+            }
+        });
+
+        async function loadLinks(page) {
+            try {
+                const data = await apiRequest(`${API_BASE}/links?page=${page}&page_size=10`, 'GET');
+                
+                if (data.code === 0) {
+                    currentPage = data.data.page;
+                    totalPages = Math.ceil(data.data.total / 10);
+                    
+                    renderLinks(data.data.list);
+                    renderPagination();
+                } else if (data.code === 401) {
+                    logout();
+                }
+            } catch (err) {
+                console.error('加载短链失败', err);
+            }
+        }
+
+        function renderLinks(list) {
+            if (list.length === 0) {
+                linksBody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            linksBody.innerHTML = list.map(item => {
+                const expireAt = item.expire_at ? new Date(item.expire_at).toLocaleString('zh-CN') : '永久';
+                const createdAt = new Date(item.created_at).toLocaleString('zh-CN');
+                const isExpired = item.expire_at && new Date(item.expire_at) < new Date();
+                const status = isExpired ? 'expired' : 'active';
+                const statusText = isExpired ? '已过期' : '正常';
+
+                return `
+                    <tr>
+                        <td>
+                            <span class="short-code" onclick="copyToClipboard('${window.location.origin}/s/${item.short_code}')">${item.short_code}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${window.location.origin}/s/${item.short_code}')">复制</button>
+                        </td>
+                        <td>${item.visit_count}</td>
+                        <td>${expireAt}</td>
+                        <td><span class="status ${status}">${statusText}</span></td>
+                        <td>${createdAt}</td>
+                        <td>
+                            <button class="btn btn-danger" style="padding: 4px 12px; font-size: 12px;" onclick="deleteLink('${item.short_code}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderPagination() {
+            pagination.innerHTML = `
+                <button onclick="loadLinks(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>
+                <span>第 ${currentPage} / ${totalPages} 页</span>
+                <button onclick="loadLinks(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>
+            `;
+        }
+
+        async function deleteLink(shortCode) {
+            if (!confirm('确定要删除这个短链吗？')) return;
+
+            try {
+                const data = await apiRequest(`${API_BASE}/links/${shortCode}`, 'DELETE');
+                
+                if (data.code === 0) {
+                    await loadLinks(currentPage);
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            } catch (err) {
+                alert('删除失败，请检查网络');
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制到剪贴板');
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert('已复制到剪贴板');
+            });
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function clearAllResults() {
+            const results = document.querySelectorAll('.result');
+            results.forEach(el => {
+                el.textContent = '';
+                el.className = 'result';
+            });
+        }
+
+        function showResult(elementId, type, message) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+    </script>
+</body>
+</html>
